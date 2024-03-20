@@ -58,7 +58,7 @@ public class ConnectionController {
 		connection.setConnectionType(connectionaddress.getConnectionType()); //adding connection details from requestbody
 		connection.setPhaseType(connectionaddress.getPhaseType());
 		
-		//adding the address from the requestbody
+		//adding the address from the request body
 		Address newAddress = addressService.addingaddress(connectionaddress.getAddress());
 		connection.setAddress(newAddress);
 		
