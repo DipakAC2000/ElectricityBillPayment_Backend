@@ -1,9 +1,6 @@
 package com.cg.services;
 
-import com.cg.exceptions.ConsumerNumberNotFoundException;
-import com.cg.exceptions.IdNotFoundException;
-import com.cg.exceptions.ReadingNotFoundException;
-import com.cg.exceptions.UnitsNotNegativeException;
+import com.cg.exceptions.*;
 import com.cg.model.Connection;
 import com.cg.model.Customer;
 import com.cg.model.Reading;
@@ -28,7 +25,7 @@ public class ReadingServiceImpl implements ReadingService {
 
     @Autowired
     ConnectionRepository connectionRepository;
-    
+
     @Override
     public Reading selfSubmitReading(Reading reading, Long consumerNumber) {
         // If user has entered negative unitsConsumed then throw an exception.
@@ -41,128 +38,163 @@ public class ReadingServiceImpl implements ReadingService {
             Connection connection = optionalConnection.orElseThrow(() ->
                     new ConsumerNumberNotFoundException("Consumer with number " + consumerNumber + " not found."));
 
-            // Link the connection to the reading
-            reading.setConnection(connection);
+            // Fetch the latest reading for the given consumerNumber from the repository
+            List<Reading> latestReading = readingRepository.findLatestReadingByConsumerNumber(consumerNumber);
 
-            // Save the reading to the database
-            Reading savedReading = readingRepository.save(reading);
+            // System.out.println("List of Reading is :" +latestReading);
 
-            // You can call your existing method to generate the bill i.e., addBill method from billService here.
-            // Bill generatedBill = billService.addBill(savedReading.getConnection(), savedReading, new Bill());
+            Reading savedReading = null;
+            if (latestReading.isEmpty()) {
+                // Handle the case when there are no readings for the consumer
+                int currentReading = reading.getUnitsConsumed();
+
+                // Link the connection to the reading
+                reading.setConnection(connection);
+                // Save the reading to the database
+                savedReading = readingRepository.save(reading);
+            }
+
+            if(latestReading.size()==1){
+                Reading previousReading = latestReading.get(0);
+                Reading currentReading = latestReading.get(0);
+                int currentMonthConsumption = currentReading.getUnitsConsumed();
+
+                // Check if the units consumed is greater than or equal to consumption of current month
+                if (reading.getUnitsConsumed() != null) {
+                    if (reading.getUnitsConsumed() < currentMonthConsumption) {
+                        throw new InvalidUnitsConsumedException("Units consumed cannot be less than the consumption of the current month: ");
+                    }
+                }
+
+                // Check if the reading date is in the future
+                if (reading.getReadingDate() != null && reading.getReadingDate().isAfter(LocalDate.now())) {
+                    throw new InvalidReadingDateException("Reading date cannot be in the future: ");
+                }
+
+                // Check if the reading date is before or equal to the previous reading date
+                if (previousReading != null && reading.getReadingDate() != null &&
+                        reading.getReadingDate().isBefore(currentReading.getReadingDate())) {
+                    throw new InvalidReadingDateException("Reading date must be after the previous reading date: ");
+                }
+                // Link the connection to the reading
+                reading.setConnection(connection);
+                // Save the reading to the database
+                savedReading = readingRepository.save(reading);
+            }
+            if (latestReading.size() >1) {
+                Reading previousReading = latestReading.get(0);
+                Reading currentReading = latestReading.get(1);
+//                System.out.println("Previous Reading is:"+ previousReading);
+//                System.out.println("Current Reading is:"+ currentReading);
+//                System.out.println("Latest reading of consumer number:" + latestReading);
+                int currentMonthConsumption = currentReading.getUnitsConsumed();
+
+
+                // Check if the units consumed is greater than or equal to consumption of current month
+                if (reading.getUnitsConsumed() != null && reading.getUnitsConsumed() < currentMonthConsumption ) {
+                    throw new InvalidUnitsConsumedException("Units consumed cannot be less than the consumption of the current month: ");
+                }
+
+
+                // Check if the reading date is in the future
+                if (reading.getReadingDate() != null && reading.getReadingDate().isAfter(LocalDate.now())) {
+                    throw new InvalidReadingDateException("Reading date cannot be in the future: ");
+                }
+
+                // Check if the reading date is before or equal to the previous reading date
+                if (previousReading != null && reading.getReadingDate() != null &&
+                        reading.getReadingDate().isBefore(currentReading.getReadingDate())) {
+                    throw new InvalidReadingDateException("Reading date must be after the previous reading date: ");
+                }
+                // Link the connection to the reading
+                reading.setConnection(connection);
+                // Save the reading to the database
+                savedReading = readingRepository.save(reading);
+            }
             return savedReading;
         }
     }
-
-
-//    @Override
-//    public Reading selfSubmitReading(Reading reading, Long consumerNumber) {
-//
-//            // If user has entered negative unitsConsumed then throw an exception.
-//            if (reading.getUnitsConsumed() != null && reading.getUnitsConsumed() <= 0) {
-//                throw new UnitsNotNegativeException("Units consumed must be greater than zero: ");
-//            } else {
-//                // Set the connection based on the consumer number
-//                Connection connection = connectionRepository.findByConsumerNumber(consumerNumber);
-//                if (connection == null) {
-//                    throw new ConsumerNumberNotFoundException("Consumer with number " + consumerNumber + " not found.");
-//                }
-//
-//                // Link the connection to the reading
-//                reading.setConnection(connection);
-//
-//                // Save the reading to the database
-//                // Save the submitted reading to the database
-//                Reading savedReading = readingRepository.save(reading);
-//
-//                // You can call your existing method to generate the bill i.e. addBill method from billService here.
-//                // Bill generatedBill = billService.addBill(savedReading.getConnection(), savedReading, new Bill());
-//                return savedReading;
-//            }
-//
-//    }
-
-
     @Override
-    public Optional<Reading> findMeterReadingByConsumerNumberAndBillDate(Long consumerNumber, LocalDate billDate) {
-     if(consumerNumber==null || billDate==null){
-         throw new IllegalArgumentException("consumerNumber and billDate must not be null");
-     }
+    public Optional<Reading> findMeterReadingByConsumerNumberAndBillDate (Long consumerNumber, LocalDate billDate){
+        if (consumerNumber == null || billDate == null) {
+            throw new IllegalArgumentException("consumerNumber and billDate must not be null");
+        }
 
-     //Retrieve the reading from reading repository.
-      Optional<Reading>  reading= Optional.ofNullable(readingRepository.findMeterReadingByConsumerNumberAndBillDate(consumerNumber, billDate));
-        if(reading!=null)
+        //Retrieve the reading from reading repository.
+        Optional<Reading> reading = Optional.ofNullable(readingRepository.findMeterReadingByConsumerNumberAndBillDate(consumerNumber, billDate));
+        if (reading != null)
             return Optional.of(reading.get());
         else
             throw new ReadingNotFoundException("Reading not found for consumer number  + consumerNumber +  and bill date  + billDate");
     }
 
     @Override
-    public List<Reading> findMeterReadingByConsumerNumber(Long consumerNumber) {
+    public List<Reading> findMeterReadingByConsumerNumber (Long consumerNumber){
         // Validate the input parameter
         if (consumerNumber == null || consumerNumber <= 0) {
             throw new IllegalArgumentException("Consumer number must be a positive non-null value.");
         }
 
         //Use repo to find readingby consumer number
-        List<Reading> reading= readingRepository.findMeterReadingByConsumerNumber(consumerNumber);
-        if(reading.isEmpty()){
-            throw new ReadingNotFoundException("No Reading not found with consumerNumber: "+consumerNumber);
+        List<Reading> reading = readingRepository.findMeterReadingByConsumerNumber(consumerNumber);
+        if (reading.isEmpty()) {
+            throw new ReadingNotFoundException("No Reading not found with consumerNumber: " + consumerNumber);
         }
         return reading;
     }
 
-    public Reading getReadingById(Long id){ //bill Id
-        Optional<Reading> reading=readingRepository.findById(id);
-        if(reading.isPresent()){
+    public Reading getReadingById (Long id){ //bill Id
+        Optional<Reading> reading = readingRepository.findById(id);
+        if (reading.isPresent()) {
             return reading.get();
         }
-        throw new IdNotFoundException("Reading not found with id:" +id);
+        throw new IdNotFoundException("Reading not found with id:" + id);
     }
 
-    public List<Reading> getReadingByConsumerNumber(Long consumerNumber){
-        List<Reading> reading= readingRepository.findMeterReadingByConsumerNumber(consumerNumber);
-        if(reading!=null){
+    public List<Reading> getReadingByConsumerNumber (Long consumerNumber){
+        List<Reading> reading = readingRepository.findLatestReadingByConsumerNumber(consumerNumber);
+        System.out.println("READING :" + reading);
+        if (reading != null) {
             return reading;
         }
-        throw new ConsumerNumberNotFoundException("Reading not found with consumer number:" +consumerNumber);
+        throw new ConsumerNumberNotFoundException("Reading not found with consumer number:" + consumerNumber);
     }
-    public List<Reading> getAllReading(){
-        List<Reading> readings=readingRepository.findAll();
+    public List<Reading> getAllReading () {
+        List<Reading> readings = readingRepository.findAll();
         return readings;
     }
 
-    public Reading updateReading(Long id, Reading reading){
+    public Reading updateReading (Long id, Reading reading){
         //Fetch the existing Reading by its ID.
-        Optional<Reading> existingReading=readingRepository.findById(id);
-        if(existingReading.isPresent()){
+        Optional<Reading> existingReading = readingRepository.findById(id);
+        if (existingReading.isPresent()) {
             Reading existing = existingReading.get();
 
-           // Update the properties of the existing Reading with the new values
+            // Update the properties of the existing Reading with the new values
             existing.setReadingDate(reading.getReadingDate());
             existing.setUnitsConsumed(reading.getUnitsConsumed());
             existing.setPricePerUnits(reading.getPricePerUnits());
 
             // Save the updated reading to repository.
-           Reading updateReading=readingRepository.save(existing);
+            Reading updateReading = readingRepository.save(existing);
             return updateReading;
-        }
-        else {
-            throw new IdNotFoundException("Reading not found with id:" +id);
-        }
-    }
-
-   public void deleteReadingByReadingId(Long readingId){
-        Optional<Reading> r=readingRepository.findById(readingId);
-        if(r.isPresent()){
-        readingRepository.deleteById(readingId);
-        System.out.println("Reading deleted successfully.");
-         }
-        else {
-            throw new IdNotFoundException("Reading not found with id:" +readingId);
+        } else {
+            throw new IdNotFoundException("Reading not found with id:" + id);
         }
     }
 
-    public void deleteAllReadings(){
+    public void deleteReadingByReadingId (Long readingId){
+        Optional<Reading> r = readingRepository.findById(readingId);
+        if (r.isPresent()) {
+            readingRepository.deleteById(readingId);
+            System.out.println("Reading deleted successfully.");
+        } else {
+            throw new IdNotFoundException("Reading not found with id:" + readingId);
+        }
+    }
+
+    public void deleteAllReadings () {
         readingRepository.deleteAll();
     }
 }
+

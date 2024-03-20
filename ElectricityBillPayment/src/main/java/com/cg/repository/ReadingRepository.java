@@ -32,7 +32,7 @@ public interface ReadingRepository extends JpaRepository<Reading, Long> {
             "JOIN r.connection c " +
             "WHERE c.consumerNumber = :consumerNumber " +
             "ORDER BY r.readingDate DESC")
-   List<Reading> findLatestReadingByConsumerNumber(@Param("consumerNumber") Long consumerNumber);
+    List<Reading> findLatestReadingByConsumerNumber(@Param("consumerNumber") Long consumerNumber);
 
 //    @Query("SELECT r FROM Reading r " +
 //            "JOIN r.connection c " +
