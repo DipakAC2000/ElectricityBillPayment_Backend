@@ -12,7 +12,7 @@ public interface ReadingService {
     Reading selfSubmitReading(Reading reading,Long consumerNumber);
 
     public Optional<Reading> findMeterReadingByConsumerNumberAndBillDate(Long consumerNumber, LocalDate billDate);
-	
-	public List<Reading> findMeterReadingByConsumerNumber(Long consumerNumber);
-	
+
+    public List<Reading> findMeterReadingByConsumerNumber(Long consumerNumber);
+
 }

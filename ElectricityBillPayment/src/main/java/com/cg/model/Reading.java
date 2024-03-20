@@ -11,7 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Entity
 @Table(name="Reading")
 public class Reading {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long readingId;
@@ -29,12 +29,12 @@ public class Reading {
 	@OneToOne(mappedBy = "reading")
 	@JsonIgnore
 	private Bill bill;
-	
+
 	@ManyToOne// No mappedBy here, as this entity is the "owning" side of the relationship.
 	@JsonBackReference
 	@JoinColumn(name = "consumerNumber") // Name of the foreign key column
 	private Connection connection;
-    
+
 
 	public Reading() {
 		super();
@@ -53,7 +53,7 @@ public class Reading {
 	public Long getReadingId() {
 		return readingId;
 	}
-	
+
 	public Integer getUnitsConsumed() {
 		return unitsConsumed;
 	}
@@ -78,7 +78,7 @@ public class Reading {
 		this.pricePerUnits = pricePerUnits;
 	}
 
-	
+
 	public Connection getConnection() {
 		return connection;
 	}

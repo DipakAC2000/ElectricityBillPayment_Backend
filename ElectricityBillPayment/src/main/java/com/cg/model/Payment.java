@@ -20,39 +20,38 @@ public class Payment {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long paymentId;
-	   
+
 	@DateTimeFormat(pattern = "yyy-MM-dd")
 	private LocalDate paymentDate;
-	   
-	private double latePaymentCharge;
-	   
+
+//	private double latePaymentCharge;
+
 	private double totalPaid;
-	  
-	@Column(nullable = false)
-	@Enumerated(EnumType.ORDINAL)
-	private PaymentMode paymentMode;
-       
+
+//	@Column(nullable = false)
+//	@Enumerated(EnumType.ORDINAL)
+//	private PaymentMode paymentMode;
+
 	@Column(nullable = false)
 	@Enumerated(EnumType.ORDINAL)
 	private PaymentStatus paymentStatus;
-	   
+
 	@OneToOne
-    @JoinColumn(name = "billId") // Specify the appropriate column name
-    private Bill bill;
+	@JoinColumn(name = "billId") // Specify the appropriate column name
+	private Bill bill;
 
 	public Payment() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public Payment(Long paymentId, LocalDate paymentDate, double latePaymentCharge, double totalPaid,
-			PaymentMode paymentMode, PaymentStatus paymentStatus, Bill bill) {
+	public Payment(Long paymentId, LocalDate paymentDate,  double totalPaid,
+				   PaymentStatus paymentStatus, Bill bill) {
 		super();
 		this.paymentId = paymentId;
 		this.paymentDate = paymentDate;
-		this.latePaymentCharge = latePaymentCharge;
+//		this.latePaymentCharge = latePaymentCharge;
 		this.totalPaid = totalPaid;
-		this.paymentMode = paymentMode;
 		this.paymentStatus = paymentStatus;
 		this.bill = bill;
 	}
@@ -69,13 +68,13 @@ public class Payment {
 		this.paymentDate = paymentDate;
 	}
 
-	public double getLatePaymentCharge() {
-		return latePaymentCharge;
-	}
-
-	public void setLatePaymentCharge(double latePaymentCharge) {
-		this.latePaymentCharge = latePaymentCharge;
-	}
+//	public double getLatePaymentCharge() {
+//		return latePaymentCharge;
+//	}
+//
+//	public void setLatePaymentCharge(double latePaymentCharge) {
+//		this.latePaymentCharge = latePaymentCharge;
+//	}
 
 	public double getTotalPaid() {
 		return totalPaid;
@@ -85,13 +84,12 @@ public class Payment {
 		this.totalPaid = totalPaid;
 	}
 
-	public PaymentMode getPaymentMode() {
-		return paymentMode;
-	}
-
-	public void setPaymentMode(PaymentMode paymentMode) {
-		this.paymentMode = paymentMode;
-	}
+//	public PaymentMode getPaymentMode() {
+//		return paymentMode;
+//	}
+//	public void setPaymentMode(PaymentMode paymentMode) {
+//		this.paymentMode = paymentMode;
+//	}
 
 	public PaymentStatus getPaymentStatus() {
 		return paymentStatus;
@@ -107,5 +105,5 @@ public class Payment {
 
 	public void setBill(Bill bill) {
 		this.bill = bill;
-	}	
+	}
 }
